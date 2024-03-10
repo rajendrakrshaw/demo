@@ -1,4 +1,4 @@
 To View the project do the following
-Step 1: git clone <The Repo link>
-Step 2: npm install
-Step 3: npm run dev
+Step 1: git clone <The Repo link><be>
+Step 2: npm install<br>
+Step 3: npm run dev<br>
