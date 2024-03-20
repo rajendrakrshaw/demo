@@ -3,5 +3,6 @@
   "/_error": "pages/_error.js",
   "/_document": "pages/_document.js",
   "/searchPage": "pages/searchPage.js",
-  "/uploadNFT": "pages/uploadNFT.js"
+  "/NFT-details": "pages/NFT-details.js",
+  "/author": "pages/author.js"
 }

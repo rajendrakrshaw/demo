@@ -57,7 +57,7 @@ const DropZone = ({
       {fileUrl && (
         <aside className={Style.DropZone_box_aside}>
           <div className={Style.DropZone_box_aside_box}>
-            <Image
+            <img
               src={fileUrl}
               alt="nft image"
               width={200}

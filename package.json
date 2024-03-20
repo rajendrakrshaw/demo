@@ -10,7 +10,10 @@
   },
   "dependencies": {
     "@openzeppelin/contracts": "^4.7.3",
+    "@walletconnect/web3-provider": "^1.8.0",
     "axios": "^1.6.7",
+    "chai": "^4.4.1",
+    "dotenv": "^16.4.5",
     "ether": "^0.0.9",
     "framer-motion": "^7.2.1",
     "ipfs-http-client": "^60.0.1",

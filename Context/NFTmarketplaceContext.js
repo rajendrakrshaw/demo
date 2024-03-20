@@ -1,9 +1,11 @@
 import React, { useState, useEffect, useContext } from "react";
-import { Web3Modal } from "web3modal";
+import Web3Modal from 'web3modal';
 import { ethers } from "ethers";
 import Router from "next/router";
 import axios from "axios";
 import { create as ipfsHttpClient } from "ipfs-http-client";
+import WalletConnectProvider from '@walletconnect/web3-provider'
+import { useRouter } from 'next/router';
 
 
 // internal import
@@ -26,14 +28,38 @@ const fetchContract = (signerOrProvider) => {
 //connecting with smart contract
 const connectingWithSmartContract = async () => {
     try {
-        // const web3Modal = new Web3Modal();
-        // const connection = await web3Modal.connect();
-        const provider = new ethers.providers.Web3Provider(ethereum);
-        const signer = provider.getSigner();
+        // Initialize Web3Modal
+        const web3Modal = new Web3Modal({
+            network: "sepolia", // change to sepolia for Sepolia test network
+            cacheProvider: true,
+            providerOptions: {
+                walletconnect: {
+                    package: WalletConnectProvider,
+                    options: {
+                        rpc: {
+                            8200: "https://rpc.sepolia.org/", // Sepolia test network RPC URL
+                        },
+                    },
+                },
+            },
+        });
+
+        // Connect to a wallet
+        const provider = await web3Modal.connect();
+
+        // Create a Web3Provider using the connected provider
+        const web3Provider = new ethers.providers.Web3Provider(provider);
+
+        // Get the signer from the provider
+        const signer = web3Provider.getSigner();
+
+        // Fetch the contract using the signer
         const contract = fetchContract(signer);
+
         return contract;
     } catch (error) {
         console.log("something went wrong", error);
+        return null;
     }
 };
 
@@ -45,6 +71,7 @@ export const NFTMarketplaceprovider = ({ children }) => {
 
     //usestate
     const [currentAccount, SetcurrentAccount] = useState("");
+    const router = useRouter();
 
     //check if wallet is connected
     const checkIfWallelConnected = async () => {
@@ -148,10 +175,12 @@ export const NFTMarketplaceprovider = ({ children }) => {
                 ? await contract.createToken(url, price, {
                     value: listingPrice.toString(),
                 })
-                : await contract.reSellToken(url, price, {
+                : await contract.resellToken(id, price, {
                     value: listingPrice.toString(),
                 });
             await transaction.wait();
+            // console.log(transaction);
+
         } catch (error) {
             console.log("error while creating sell", error);
         }
@@ -162,7 +191,7 @@ export const NFTMarketplaceprovider = ({ children }) => {
         try {
             const provider = new ethers.providers.JsonRpcProvider();
             const contract = fetchContract(provider);
-            const data = await contract.fetchMarketItem();
+            const data = await contract.fetchMarketItems();
             const items = await Promise.all(
                 data.map(
                     async ({ tokenId, seller, owner, price: unformattedprice }) => {
@@ -193,14 +222,18 @@ export const NFTMarketplaceprovider = ({ children }) => {
         }
     };
 
-    //fetch mynft
+    useEffect(() => {
+        fetchNFT();
+    }, [])
+
+    //fetch my nft
     const fetchMyNFT = async (type) => {
         try {
             const contract = await connectingWithSmartContract();
             const data =
                 type == "fetchItemListed"
                     ? await contract.fetchItemsListed()
-                    : await contract.fetchMyNFT();
+                    : await contract.fetchMyNFTs();
             const items = await Promise.all(
                 data.map(async ({ tokenId, seller, owner, price: unformattedprice }) => {
                     const tokenURI = await contract.tokenURI(tokenId);
@@ -240,6 +273,7 @@ export const NFTMarketplaceprovider = ({ children }) => {
                 value: price,
             });
             await transaction.wait();
+            router.push("/author");
         } catch (error) {
             console.log("error while buying nft")
         }
@@ -249,7 +283,7 @@ export const NFTMarketplaceprovider = ({ children }) => {
 
     return (
         <NFTMarketplaceContext.Provider
-            value={{ checkIfWallelConnected, connectWallet, uploadToIPFS, createNFT, fetchNFT, fetchMyNFT, buyNFT, currentAccount, titleData }}
+            value={{ checkIfWallelConnected, connectWallet, uploadToIPFS, createNFT, fetchNFT, fetchMyNFT, buyNFT, createSale, currentAccount, titleData }}
         >
             {children}
         </NFTMarketplaceContext.Provider>
